@@ -1,0 +1,11 @@
+[package]
+name = "godot_rust_template_test"
+version = "0.1.0"
+authors = ["cgiguere <c.giguere42@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+gdnative = "0.9.3"
