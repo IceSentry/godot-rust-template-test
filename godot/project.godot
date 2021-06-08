@@ -17,7 +17,7 @@ _global_script_class_icons={
 
 config/name="godot-rust-template-test"
 run/main_scene="res://scenes/Game.tscn"
-config/icon="res://assets/godot-ferris-32x32.png"
+config/icon="res://assets/icon/godot-ferris-32x32.png"
 
 [rendering]
 

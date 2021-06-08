@@ -40,7 +40,7 @@ impl Game {
 
     // This function will be called in every frame
     #[export]
-    unsafe fn _process(&self, _owner: &Node, delta: f64) {
-        godot_print!("Inside {} _process(), delta is {}", self.name, delta);
+    unsafe fn _process(&self, _owner: &Node, _delta: f64) {
+        // godot_print!("Inside {} _process(), delta is {}", self.name, delta);
     }
 }

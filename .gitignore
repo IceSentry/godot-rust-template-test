@@ -10,5 +10,9 @@ export_presets.cfg
 .mono/
 data_*/
 
+/logs/
+
 # Cargo
 /target/
+
+/lib/
