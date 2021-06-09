@@ -16,6 +16,7 @@ fn main() -> Result<()> {
         Some("copy") => copy(release),
         Some("edit") => edit(),
         Some("run") => run(release),
+        Some("watch") => watch(),
         task => {
             bail!("Uknown Task: {:?}", task)
         }
@@ -60,4 +61,10 @@ fn run(release: bool) -> Result<()> {
     cmd!("godot --path godot/ -d")
         .run()
         .with_context(|| "Failed to run game".to_string())
+}
+
+fn watch() -> Result<()> {
+    cmd!("cargo watch -- cargo xtask build")
+        .run()
+        .with_context(|| "Failed to watch".to_string())
 }
