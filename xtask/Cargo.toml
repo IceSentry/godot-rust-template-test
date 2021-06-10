@@ -8,3 +8,7 @@ edition = "2018"
 [dependencies]
 xshell = "0.1.14"
 anyhow = "1.0.40"
+handlebars = "4.0.0"
+convert_case = "0.4.0"
+syn = { version = "1.0.73", features = ["parsing", "full", "extra-traits", "visit-mut"] }
+quote = "1.0.9"

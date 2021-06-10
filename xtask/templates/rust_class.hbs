@@ -1,0 +1,23 @@
+use gdnative::api::*;
+use gdnative::prelude::*;
+use gdrust::macros::gdrust;
+
+#[gdrust(extends = {{node_type}})]
+pub struct {{class_name}} {
+    name: String
+}
+
+#[methods]
+impl {{class_name}} {
+    #[export]
+    fn _ready(&mut self, _owner: &{{node_type}}) {
+        self.name = "{{class_name}}".to_string();
+        godot_print!("{} is ready!", self.name);
+    }
+
+    // This function will be called in every frame
+    #[export]
+    fn _process(&self, _owner: &{{node_type}}, delta: f64) {
+        godot_print!("Inside {} _process(), delta is {}", self.name, delta);
+    }
+}

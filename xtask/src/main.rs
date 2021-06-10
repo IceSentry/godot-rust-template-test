@@ -1,7 +1,9 @@
-use std::path::PathBuf;
+mod generator;
 
 use anyhow::{bail, Context, Result};
 use xshell::{cmd, cp, mkdir_p};
+
+use std::path::PathBuf;
 
 const PROJECT_NAME: &str = "godot_rust_template_test";
 const TARGET: &str = "x86_64-pc-windows-msvc";
@@ -17,6 +19,12 @@ fn main() -> Result<()> {
         Some("edit") => edit(),
         Some("run") => run(release),
         Some("watch") => watch(),
+        Some("new_class") => new_class(
+            std::env::args()
+                .nth(2)
+                .as_deref()
+                .expect("no class name provided"),
+        ),
         task => {
             bail!("Uknown Task: {:?}", task)
         }
@@ -67,4 +75,11 @@ fn watch() -> Result<()> {
     cmd!("cargo watch -- cargo xtask build")
         .run()
         .with_context(|| "Failed to watch".to_string())
+}
+
+fn new_class(class_name: &str) -> Result<()> {
+    generator::generate(generator::GenerateType::Class {
+        class_name: class_name.into(),
+        node_type: "Node".into(),
+    })
 }
