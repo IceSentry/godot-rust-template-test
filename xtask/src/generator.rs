@@ -2,7 +2,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use handlebars::Handlebars;
 use quote::format_ident;
-use std::{collections::HashMap, fs::File, path::Path, process::Command};
+use std::{collections::HashMap, fmt::Display, fs::File, path::Path, process::Command};
 use syn::{parse_quote, visit_mut::VisitMut, Block};
 
 pub enum GenerateType {
@@ -22,6 +22,12 @@ pub fn generate(generate_type: GenerateType) -> Result<()> {
 }
 
 fn generate_class(class_name: String, node_type: String) -> Result<()> {
+    println!(
+        "Generating new class {} : {}",
+        class_name.to_case(Case::Pascal),
+        node_type
+    );
+
     let mut data = HashMap::new();
     data.insert("class_name", class_name.to_case(Case::Pascal));
     data.insert("node_type", node_type);
@@ -38,7 +44,7 @@ fn generate_class(class_name: String, node_type: String) -> Result<()> {
         format!("./godot/native/{}.gdns", class_name.to_case(Case::Pascal)),
     )?;
 
-    add_mod(class_name.to_case(Case::Snake))?;
+    update_lib(class_name.to_case(Case::Snake))?;
 
     Ok(())
 }
@@ -49,8 +55,9 @@ fn generate_and_write_file<P>(
     file_path: P,
 ) -> Result<()>
 where
-    P: AsRef<Path>,
+    P: AsRef<Path> + Display,
 {
+    println!("Generating {}...", file_path);
     let handlebars = Handlebars::new();
     handlebars.render_template_to_write(template_string, data, File::create(file_path)?)?;
     Ok(())
@@ -77,7 +84,8 @@ fn write_and_fmt<P: AsRef<Path>, S: ToString>(path: P, code: S) -> Result<()> {
     Ok(())
 }
 
-fn add_mod(mod_name: String) -> Result<()> {
+fn update_lib(mod_name: String) -> Result<()> {
+    println!("Updating lib.rs");
     let source = std::fs::read_to_string("./rust/src/lib.rs")?;
     let mut syntax = syn::parse_file(source.as_str())?;
     let mut visitor = Visitor {

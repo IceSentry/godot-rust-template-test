@@ -1,6 +1,7 @@
 mod generator;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
+use clap::{AppSettings, Clap};
 use xshell::{cmd, cp, mkdir_p};
 
 use std::path::PathBuf;
@@ -9,31 +10,73 @@ const PROJECT_NAME: &str = "godot_rust_template_test";
 const TARGET: &str = "x86_64-pc-windows-msvc";
 const TARGET_DIR: &str = "./target";
 
+#[derive(Clap)]
+#[clap(version = "1.0", author = "Icesentry")]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct Opts {
+    #[clap(subcommand)]
+    command: Command,
+}
+
+#[derive(Clap)]
+enum Command {
+    /// Build the rust library and copy it to the lib directory to be used by godot
+    Build(Build),
+    /// Copy the compiled rust library to the lib directory used by godot
+    Copy(Copy),
+    /// Launch the godot editor with the current project
+    Edit,
+    /// Builds the rust project then launchs the game with godot
+    Run(Run),
+    /// build and copy whenever a change is detected
+    Watch,
+    /// Generates a new class. new .rs file, new .gdns file, updates lib.rs
+    NewClass(NewClass),
+}
+
+#[derive(Clap)]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct Build {
+    #[clap(short, long)]
+    release: bool,
+}
+
+#[derive(Clap)]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct Copy {
+    #[clap(short, long)]
+    release: bool,
+}
+
+#[derive(Clap)]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct Run {
+    #[clap(short, long)]
+    release: bool,
+}
+
+#[derive(Clap)]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct NewClass {
+    class_name: String,
+    #[clap(default_value = "Node")]
+    node_type: String,
+}
+
 fn main() -> Result<()> {
-    let task = std::env::args().nth(1);
-    let flag = std::env::args().nth(2);
-    let release = matches!(flag.as_deref(), Some("--release"));
-    match task.as_deref() {
-        Some("build") => build(release),
-        Some("copy") => copy(release),
-        Some("edit") => edit(),
-        Some("run") => run(release),
-        Some("watch") => watch(),
-        Some("new_class") => new_class(
-            std::env::args()
-                .nth(2)
-                .as_deref()
-                .expect("no class name provided"),
-        ),
-        task => {
-            bail!("Uknown Task: {:?}", task)
-        }
+    let opts: Opts = Opts::parse();
+
+    match opts.command {
+        Command::Build(args) => build(args.release),
+        Command::Copy(args) => copy(args.release),
+        Command::Edit => edit(),
+        Command::Run(args) => run(args.release),
+        Command::Watch => watch(),
+        Command::NewClass(args) => new_class(args.class_name, args.node_type),
     }
 }
 
-/// Build the rust library and copy it to the lib directory to be used by godot
 fn build(release: bool) -> Result<()> {
-    // build the library
     if release {
         cmd!("cargo build --target {TARGET} --release").run()?;
     } else {
@@ -42,7 +85,6 @@ fn build(release: bool) -> Result<()> {
     copy(release)
 }
 
-/// Copy the compiled rust library to the lib directory used by godot
 fn copy(release: bool) -> Result<()> {
     let mut target_dir = PathBuf::from(TARGET_DIR);
     target_dir.push(TARGET);
@@ -56,14 +98,12 @@ fn copy(release: bool) -> Result<()> {
         .with_context(|| "Failed to copy library to lib directory".to_string())
 }
 
-/// Launch the godot editor with the current project
 fn edit() -> Result<()> {
     cmd!("godot --path godot/ -e &")
         .run()
         .with_context(|| "Failed to open godot editor".to_string())
 }
 
-/// Builds the rust project then launchs the game with godot
 fn run(release: bool) -> Result<()> {
     build(release)?;
     cmd!("godot --path godot/ -d")
@@ -77,9 +117,9 @@ fn watch() -> Result<()> {
         .with_context(|| "Failed to watch".to_string())
 }
 
-fn new_class(class_name: &str) -> Result<()> {
+fn new_class(class_name: String, node_type: String) -> Result<()> {
     generator::generate(generator::GenerateType::Class {
-        class_name: class_name.into(),
-        node_type: "Node".into(),
+        class_name,
+        node_type,
     })
 }
