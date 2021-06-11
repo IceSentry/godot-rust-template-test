@@ -38,13 +38,16 @@ fn generate_class(class_name: String, node_type: String) -> Result<()> {
     ];
 
     info!("Validating project files");
-    let is_valid_project = project_files.iter().all(|i| {
-        let exists = Path::new(i).exists();
-        error!("{} not found", i);
+    let is_valid_project = project_files.iter().map(Path::new).all(|path| {
+        let exists = path.exists();
+        if !exists {
+            error!("not found: {:?}", path);
+        }
         exists
     });
 
     if !is_valid_project {
+        error!("Project format is not valid");
         bail!("Project format is not valid");
     }
 
