@@ -3,6 +3,7 @@ use convert_case::{Case, Casing};
 use handlebars::Handlebars;
 use log::{error, info};
 use quote::format_ident;
+use quote::quote;
 use std::{collections::HashMap, fmt::Display, fs::File, path::Path, process::Command};
 use syn::{parse_quote, visit_mut::VisitMut, Block};
 
@@ -36,6 +37,7 @@ fn generate_class(class_name: String, node_type: String) -> Result<()> {
         "rust/Cargo.toml",
     ];
 
+    info!("Validating project files");
     let is_valid_project = project_files.iter().all(|i| {
         let exists = Path::new(i).exists();
         error!("{} not found", i);
@@ -43,7 +45,6 @@ fn generate_class(class_name: String, node_type: String) -> Result<()> {
     });
 
     if !is_valid_project {
-        error!("Project format is not valid");
         bail!("Project format is not valid");
     }
 
@@ -111,15 +112,14 @@ fn write_and_fmt<P: AsRef<Path>, S: ToString>(path: P, code: S) -> Result<()> {
 
 fn update_lib(mod_name: String) -> Result<()> {
     info!("Updating lib.rs");
-    let source = std::fs::read_to_string("./rust/src/lib.rs")?;
+    let lib_path = "./rust/src/lib.rs";
+    let source = std::fs::read_to_string(lib_path)?;
     let mut syntax = syn::parse_file(source.as_str())?;
     let mut visitor = Visitor {
         mod_name: mod_name.to_case(Case::Snake),
         class_name: mod_name.to_case(Case::Pascal),
     };
     visitor.visit_file_mut(&mut syntax);
-
-    write_and_fmt("./rust/src/lib.rs", quote::quote!(#syntax)).expect("unable to save or format");
-
+    write_and_fmt(lib_path, quote!(#syntax))?;
     Ok(())
 }
