@@ -32,6 +32,7 @@ fn generate_class(class_name: String, node_type: String) -> Result<()> {
         "godot/default_env.tres",
         "godot/native/game.gdnlib",
         "godot/project.godot",
+        "godot/scenes",
         "rust/src/lib.rs",
         "rust/Cargo.toml",
     ];
@@ -67,6 +68,12 @@ fn generate_class(class_name: String, node_type: String) -> Result<()> {
         include_str!("../templates/gdns_class.hbs"),
         &data,
         format!("./godot/native/{}.gdns", class_name.to_case(Case::Pascal)),
+    )?;
+
+    generate_and_write_file(
+        include_str!("../templates/tscn.hbs"),
+        &data,
+        format!("./godot/scenes/{}.tscn", class_name.to_case(Case::Pascal)),
     )?;
 
     update_lib(class_name.to_case(Case::Snake))?;
