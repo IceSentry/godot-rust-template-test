@@ -9,3 +9,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 gdnative = "0.9.3"
+fastrand = "1.4.1"
+gdrust = { git = "https://github.com/wyattjsmith1/gdrust.git" }
+automod = "1.0.2"
+macros = { path = "../macros" }
