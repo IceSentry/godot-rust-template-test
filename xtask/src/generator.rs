@@ -30,7 +30,6 @@ fn generate_class(class_name: String, node_type: String) -> Result<()> {
     let project_files: Vec<&str> = vec![
         "Cargo.toml",
         "godot/default_env.tres",
-        "godot/export_presets.cfg",
         "godot/native/game.gdnlib",
         "godot/project.godot",
         "rust/src/lib.rs",
