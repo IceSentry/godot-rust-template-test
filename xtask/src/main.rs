@@ -2,7 +2,7 @@ mod generator;
 
 use anyhow::{Context, Result};
 use clap::{AppSettings, Clap};
-use simplelog::{ColorChoice, Config, SimpleLogger, TermLogger, TerminalMode};
+use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 use xshell::{cmd, cp, mkdir_p};
 
 use std::path::PathBuf;

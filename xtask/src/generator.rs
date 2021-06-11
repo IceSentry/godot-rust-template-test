@@ -4,8 +4,9 @@ use handlebars::Handlebars;
 use log::{error, info};
 use quote::format_ident;
 use quote::quote;
+use syn::{parse_quote, visit_mut::VisitMut, Block, Item, Stmt};
+
 use std::{collections::HashMap, fmt::Display, fs::File, path::Path, process::Command};
-use syn::{parse_quote, visit_mut::VisitMut, Block};
 
 pub enum GenerateType {
     Class {
@@ -98,18 +99,41 @@ where
     Ok(())
 }
 
-struct Visitor {
+struct InitVisitor {
     mod_name: String,
     class_name: String,
 }
 
-impl VisitMut for Visitor {
-    fn visit_block_mut(&mut self, i: &mut Block) {
+impl VisitMut for InitVisitor {
+    fn visit_block_mut(&mut self, block: &mut Block) {
         let mod_name = format_ident!("{}", self.mod_name);
         let class_name = format_ident!("{}", self.class_name);
-        i.stmts.push(parse_quote! {
+
+        block.stmts.push(parse_quote! {
             handle.add_class::<#mod_name::#class_name>();
         });
+    }
+}
+
+struct ModVisitor {
+    mod_name: String,
+}
+
+impl VisitMut for ModVisitor {
+    fn visit_block_mut(&mut self, block: &mut Block) {
+        let mod_name = format_ident!("{}", self.mod_name);
+        let index = block
+            .stmts
+            .iter()
+            .rposition(|x| matches!(x, Stmt::Item(Item::Mod(_))))
+            .unwrap_or(0);
+
+        block.stmts.insert(
+            index,
+            parse_quote! {
+                mod #mod_name;
+            },
+        );
     }
 }
 
@@ -119,16 +143,38 @@ fn write_and_fmt<P: AsRef<Path>, S: ToString>(path: P, code: S) -> Result<()> {
     Ok(())
 }
 
+fn insert_mod(syntax: &mut syn::File, mod_name: String) {
+    let mod_name = format_ident!("{}", mod_name);
+    let index = syntax
+        .items
+        .iter()
+        .rposition(|x| matches!(x, syn::Item::Mod(_)))
+        .unwrap_or(0);
+
+    syntax.items.insert(
+        index,
+        parse_quote! {
+            mod #mod_name;
+        },
+    );
+}
+
+fn insert_handle(mut syntax: &mut syn::File, mod_name: String) {
+    let mut init_visitor = InitVisitor {
+        mod_name: mod_name.to_case(Case::Snake),
+        class_name: mod_name.to_case(Case::Pascal),
+    };
+    init_visitor.visit_file_mut(&mut syntax);
+}
+
 fn update_lib(mod_name: String) -> Result<()> {
     info!("Updating lib.rs");
     let lib_path = "./rust/src/lib.rs";
     let source = std::fs::read_to_string(lib_path)?;
     let mut syntax = syn::parse_file(source.as_str())?;
-    let mut visitor = Visitor {
-        mod_name: mod_name.to_case(Case::Snake),
-        class_name: mod_name.to_case(Case::Pascal),
-    };
-    visitor.visit_file_mut(&mut syntax);
+
+    insert_mod(&mut syntax, mod_name.clone());
+    insert_handle(&mut syntax, mod_name);
     write_and_fmt(lib_path, quote!(#syntax))?;
     Ok(())
 }
