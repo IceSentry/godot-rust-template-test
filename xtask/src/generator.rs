@@ -1,6 +1,7 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use convert_case::{Case, Casing};
 use handlebars::Handlebars;
+use log::{error, info};
 use quote::format_ident;
 use std::{collections::HashMap, fmt::Display, fs::File, path::Path, process::Command};
 use syn::{parse_quote, visit_mut::VisitMut, Block};
@@ -22,7 +23,31 @@ pub fn generate(generate_type: GenerateType) -> Result<()> {
 }
 
 fn generate_class(class_name: String, node_type: String) -> Result<()> {
-    println!(
+    // TODO validate project structure
+    // use the `which` crate to detect if godot is available in the path
+
+    let project_files: Vec<&str> = vec![
+        "Cargo.toml",
+        "godot/default_env.tres",
+        "godot/export_presets.cfg",
+        "godot/native/game.gdnlib",
+        "godot/project.godot",
+        "rust/src/lib.rs",
+        "rust/Cargo.toml",
+    ];
+
+    let is_valid_project = project_files.iter().all(|i| {
+        let exists = Path::new(i).exists();
+        error!("{} not found", i);
+        exists
+    });
+
+    if !is_valid_project {
+        error!("Project format is not valid");
+        bail!("Project format is not valid");
+    }
+
+    info!(
         "Generating new class {} : {}",
         class_name.to_case(Case::Pascal),
         node_type
@@ -57,7 +82,7 @@ fn generate_and_write_file<P>(
 where
     P: AsRef<Path> + Display,
 {
-    println!("Generating {}...", file_path);
+    info!("Generating {}...", file_path);
     let handlebars = Handlebars::new();
     handlebars.render_template_to_write(template_string, data, File::create(file_path)?)?;
     Ok(())
@@ -85,7 +110,7 @@ fn write_and_fmt<P: AsRef<Path>, S: ToString>(path: P, code: S) -> Result<()> {
 }
 
 fn update_lib(mod_name: String) -> Result<()> {
-    println!("Updating lib.rs");
+    info!("Updating lib.rs");
     let source = std::fs::read_to_string("./rust/src/lib.rs")?;
     let mut syntax = syn::parse_file(source.as_str())?;
     let mut visitor = Visitor {

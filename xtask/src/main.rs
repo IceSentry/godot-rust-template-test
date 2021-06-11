@@ -65,7 +65,10 @@ struct NewClass {
 
 fn main() -> Result<()> {
     let opts: Opts = Opts::parse();
-
+    env_logger::Builder::from_default_env()
+        .target(env_logger::Target::Stdout)
+        .filter_level(log::LevelFilter::Info)
+        .init();
     match opts.command {
         Command::Build(args) => build(args.release),
         Command::Copy(args) => copy(args.release),
