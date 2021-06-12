@@ -1,5 +1,7 @@
-use gdnative::api::{AnimatedSprite, RigidBody2D};
-use gdnative::prelude::*;
+use gdnative::{
+    api::{AnimatedSprite, RigidBody2D},
+    prelude::*,
+};
 use gdrust::macros::gdrust;
 use macros::get_node;
 

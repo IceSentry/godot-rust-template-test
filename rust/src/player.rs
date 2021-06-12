@@ -1,6 +1,9 @@
-use gdnative::api::{AnimatedSprite, Area2D, CollisionShape2D, PhysicsBody2D};
-use gdnative::prelude::*;
+use gdnative::{
+    api::{AnimatedSprite, Area2D, CollisionShape2D, PhysicsBody2D},
+    prelude::*,
+};
 use gdrust::macros::gdrust;
+
 use macros::get_node;
 
 #[gdrust(extends = Area2D)]

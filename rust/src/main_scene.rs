@@ -2,13 +2,14 @@ use gdnative::{
     api::{PathFollow2D, Position2D, RigidBody2D},
     prelude::*,
 };
-use macros::{get_node, get_node_as_instance};
+use gdrust::macros::gdrust;
 
 use crate::{
+    hud::Hud,
     player::Player,
     utils::{fastrand_f32_range, fastrand_f64_range, get_instance},
 };
-use gdrust::macros::gdrust;
+use macros::{get_node, get_node_as_instance};
 
 #[gdrust(extends = Node)]
 pub struct Main {
@@ -21,8 +22,8 @@ pub struct Main {
 #[methods]
 impl Main {
     #[export]
-    fn _ready(&mut self, owner: &Node) {
-        self.new_game(owner);
+    fn _ready(&mut self, _owner: &Node) {
+        // self.new_game(owner);
     }
 
     #[export]
@@ -30,6 +31,12 @@ impl Main {
         godot_print!("game_over");
         get_node!(owner, Timer, "ScoreTimer").stop();
         get_node!(owner, Timer, "MobTimer").stop();
+
+        let hud = get_node_as_instance!(owner, Hud, "Hud");
+        hud.map(|hud, owner| {
+            hud.show_game_over(&*owner);
+        })
+        .expect("Unable to get hud");
     }
 
     #[export]
@@ -42,6 +49,13 @@ impl Main {
             .expect("failed to call start() on Player");
 
         get_node!(owner, Timer, "StartTimer").start(0.0);
+
+        let hud = get_node_as_instance!(owner, Hud, "Hud");
+        hud.map(|hud, owner| {
+            hud.update_score(&*owner, self.score);
+            hud.show_message(&*owner, "Get Ready".into());
+        })
+        .expect("Unable to get hud");
     }
 
     #[export]
@@ -51,8 +65,14 @@ impl Main {
     }
 
     #[export]
-    fn _on_score_timer_timeout(&mut self, _owner: &Node) {
+    fn _on_score_timer_timeout(&mut self, owner: &Node) {
         self.score += 1;
+
+        let hud = get_node_as_instance!(owner, Hud, "Hud");
+        hud.map(|hud, owner| {
+            hud.update_score(&*owner, self.score);
+        })
+        .expect("Unable to get hud");
     }
 
     #[export]
