@@ -22,9 +22,7 @@ pub struct Main {
 #[methods]
 impl Main {
     #[export]
-    fn _ready(&mut self, _owner: &Node) {
-        // self.new_game(owner);
-    }
+    fn _ready(&mut self, _owner: &Node) {}
 
     #[export]
     fn game_over(&self, owner: &Node) {
@@ -37,6 +35,10 @@ impl Main {
             hud.show_game_over(&*owner);
         })
         .expect("Unable to get hud");
+
+        // remove creeps
+        let tree = unsafe { owner.get_tree().expect("Failed to get tree").assume_safe() };
+        tree.call_group("mobs", "queue_free", &[]);
     }
 
     #[export]
