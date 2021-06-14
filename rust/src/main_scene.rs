@@ -1,5 +1,5 @@
 use gdnative::{
-    api::{PathFollow2D, Position2D, RigidBody2D},
+    api::{AudioStreamPlayer, PathFollow2D, Position2D, RigidBody2D},
     prelude::*,
 };
 use gdrust::macros::gdrust;
@@ -26,7 +26,6 @@ impl Main {
 
     #[export]
     fn game_over(&self, owner: &Node) {
-        godot_print!("game_over");
         get_node!(owner, Timer, "ScoreTimer").stop();
         get_node!(owner, Timer, "MobTimer").stop();
 
@@ -39,6 +38,9 @@ impl Main {
         // remove creeps
         let tree = unsafe { owner.get_tree().expect("Failed to get tree").assume_safe() };
         tree.call_group("mobs", "queue_free", &[]);
+
+        get_node!(owner, AudioStreamPlayer, "Music").stop();
+        get_node!(owner, AudioStreamPlayer, "GameOverSound").play(0.0);
     }
 
     #[export]
@@ -58,6 +60,8 @@ impl Main {
             hud.show_message(&*owner, "Get Ready".into());
         })
         .expect("Unable to get hud");
+
+        get_node!(owner, AudioStreamPlayer, "Music").play(0.0);
     }
 
     #[export]

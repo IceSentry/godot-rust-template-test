@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://native/Hud.gdns" type="Script" id=1]
 [ext_resource path="res://assets/fonts/Xolonium-Regular.ttf" type="DynamicFontData" id=2]
@@ -6,6 +6,12 @@
 [sub_resource type="DynamicFont" id=1]
 size = 64
 font_data = ExtResource( 2 )
+
+[sub_resource type="InputEventAction" id=2]
+action = "ui_select"
+
+[sub_resource type="ShortCut" id=3]
+shortcut = SubResource( 2 )
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource( 1 )
@@ -44,6 +50,7 @@ margin_top = -200.0
 margin_right = 90.0
 margin_bottom = -100.0
 custom_fonts/font = SubResource( 1 )
+shortcut = SubResource( 3 )
 text = "Start"
 __meta__ = {
 "_edit_use_anchors_": false
@@ -52,5 +59,14 @@ __meta__ = {
 [node name="MessageTimer" type="Timer" parent="."]
 wait_time = 2.0
 one_shot = true
+
+[node name="GameOverTimer" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+
+[node name="StartButtonTimer" type="Timer" parent="."]
+one_shot = true
 [connection signal="pressed" from="StartButton" to="." method="on_start_button_pressed"]
 [connection signal="timeout" from="MessageTimer" to="." method="_on_message_timer_timeout"]
+[connection signal="timeout" from="GameOverTimer" to="." method="_on_game_over_timer_timeout"]
+[connection signal="timeout" from="StartButtonTimer" to="." method="_on_start_button_timer_timeout"]
